@@ -9,6 +9,10 @@ import (
 
 var jwtKey = []byte("secret")
 
+func JwtKey() []byte {
+	return jwtKey
+}
+
 // Create JWT Token
 func CreateToken(user models.User) (string, error) {
 	claims := &jwt.StandardClaims{
