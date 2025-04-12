@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/DebroyeAntoine/go_link_vault/internal/auth"
 	"github.com/DebroyeAntoine/go_link_vault/internal/db"
 	"github.com/DebroyeAntoine/go_link_vault/internal/models"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // Link Handler
@@ -25,7 +26,7 @@ func CreateLinkHandler(c *gin.Context) {
 }
 
 // Register handler
-func Register(c *gin.Context) {
+func RegisterUserHandler(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -53,36 +54,37 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"jwt": token})
+	c.JSON(http.StatusCreated, gin.H{"token": token})
 }
 
-// Login handler
-func Login(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func LoginUserHandler(c *gin.Context) {
+	var input LoginInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Find user by email
 	var dbUser models.User
-	if err := db.DB.Where("email = ?", user.Email).First(&dbUser).Error; err != nil {
+	if err := db.DB.Where("email = ?", input.Email).First(&dbUser).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	// Check password
-	if !auth.CheckPasswordHash(user.Password, dbUser.Password) {
+	if !auth.CheckPasswordHash(input.Password, dbUser.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	// Generate JWT token
 	token, err := auth.CreateToken(dbUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating JWT"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"jwt": token})
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }
