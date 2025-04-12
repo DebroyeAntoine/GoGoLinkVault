@@ -78,7 +78,7 @@ func SetupTestDB() {
 	}
 
 	// Supprimer la table existante si elle existe
-	DB.Exec("DROP TABLE IF EXISTS links")
+	DB.Exec("TRUNCATE TABLE links, users RESTART IDENTITY CASCADE")
 
 	// Migrer les tables
 	err = DB.AutoMigrate(&models.Link{})
