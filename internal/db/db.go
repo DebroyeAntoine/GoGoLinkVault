@@ -48,6 +48,10 @@ func Connect() {
 	if err != nil {
 		log.Fatal("Error migrating database: ", err)
 	}
+	err = DB.AutoMigrate(&models.User{}, &models.Link{})
+	if err != nil {
+		log.Fatal("Error migrating database: ", err)
+	}
 }
 
 // Fonction utilitaire pour configurer une base de données de test
@@ -86,6 +90,10 @@ func SetupTestDB() {
 		log.Fatal("Error migrating test database: ", err)
 	}
 	err = DB.AutoMigrate(&models.User{})
+	if err != nil {
+		log.Fatal("Error migrating database: ", err)
+	}
+	err = DB.AutoMigrate(&models.User{}, &models.Link{})
 	if err != nil {
 		log.Fatal("Error migrating database: ", err)
 	}

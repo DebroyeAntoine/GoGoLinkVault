@@ -9,20 +9,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Link Handler
 func CreateLinkHandler(c *gin.Context) {
+	// Extraire l'email du token
+	userEmail, exists := c.Get("userEmail")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Trouver l'utilisateur dans la DB
+	var user models.User
+	if err := db.DB.Where("email = ?", userEmail).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
 	var link models.Link
 	if err := c.ShouldBindJSON(&link); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	link.UserID = user.ID
+
 	if err := db.DB.Create(&link).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not save the link"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": link.ID, "url": link.URL, "title": link.Title, "tags": link.Tags})
+	c.JSON(http.StatusCreated, gin.H{
+		"id":    link.ID,
+		"url":   link.URL,
+		"title": link.Title,
+		"tags":  link.Tags,
+	})
 }
 
 // Register handler

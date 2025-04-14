@@ -19,7 +19,8 @@ func AuthRequired() gin.HandlerFunc {
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Parse avec claims
+		token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return auth.JwtKey(), nil
 		})
 
@@ -28,7 +29,14 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// Token is valid, continue
+		// Set dans le contexte
+		if claims, ok := token.Claims.(*jwt.StandardClaims); ok {
+			c.Set("userEmail", claims.Issuer)
+		} else {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			return
+		}
+
 		c.Next()
 	}
 }

@@ -11,7 +11,9 @@ type Tags []string
 // Link représente un lien avec son URL, son titre et ses tags
 type Link struct {
 	gorm.Model
-	URL   string         `json:"url"`
-	Title string         `json:"title"`
-	Tags  datatypes.JSON `json:"tags"`
+	URL    string         `json:"url"`
+	Title  string         `json:"title"`
+	Tags   datatypes.JSON `json:"tags"`
+	UserID uint           `json:"-"` // Clé étrangère
+	User   User           `gorm:"foreignKey:UserID"`
 }
