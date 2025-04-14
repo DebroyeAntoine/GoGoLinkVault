@@ -5,6 +5,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"time"
+
+	"errors"
+	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 var jwtKey = []byte("secret")
@@ -41,4 +45,32 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func ValidateToken(c *gin.Context) (*jwt.StandardClaims, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return nil, errors.New("missing authorization header")
+	}
+
+	// Extrait le token du header
+	tokenString := strings.Split(authHeader, " ")[1]
+
+	// Parse le token
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	// Récupère les claims (informations utilisateur)
+	claims, ok := token.Claims.(*jwt.StandardClaims)
+	c.Set("userEmail", claims.Issuer)
+	if !ok {
+		return nil, errors.New("invalid token claims")
+	}
+
+	return claims, nil
 }
