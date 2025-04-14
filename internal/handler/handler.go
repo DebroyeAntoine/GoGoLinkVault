@@ -108,3 +108,30 @@ func LoginUserHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
+
+func GetLinksHandler(c *gin.Context) {
+	// Vérification du token JWT et récupération de l'ID de l'utilisateur
+	claims, err := auth.ValidateToken(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Récupération de l'email directement depuis les claims
+	email := claims.Issuer
+
+	var user models.User
+	if err := db.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Récupération de tous les liens de l'utilisateur
+	var links []models.Link
+	if err := db.DB.Where("user_id = ?", user.ID).Find(&links).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch links"})
+		return
+	}
+
+	c.JSON(http.StatusOK, links)
+}

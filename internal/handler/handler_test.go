@@ -13,7 +13,13 @@ import (
 	"github.com/DebroyeAntoine/go_link_vault/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/datatypes"
 )
+
+func toJSON(tags []string) datatypes.JSON {
+	jsonBytes, _ := json.Marshal(tags)
+	return datatypes.JSON(jsonBytes)
+}
 
 func TestCreateLink(t *testing.T) {
 	// Configurez la base de données de test
@@ -75,4 +81,60 @@ func TestCreateLink(t *testing.T) {
 	assert.Equal(t, "https://go.dev", link.URL)
 	assert.Equal(t, "The Go Programming Language", link.Title)
 	assert.ElementsMatch(t, []string{"go", "programming"}, tags)
+}
+
+func TestGetLinks(t *testing.T) {
+	db.SetupTestDB()
+
+	// Création d’un utilisateur et hash du mot de passe
+	hashedPwd, _ := auth.HashPassword("testpassword")
+	user := models.User{
+		Email:    "getlinks@example.com",
+		Password: hashedPwd,
+	}
+	err := db.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	// Création de quelques liens pour cet utilisateur
+	links := []models.Link{
+		{
+			URL:    "https://golang.org",
+			Title:  "Golang",
+			Tags:   toJSON([]string{"go", "lang"}),
+			UserID: user.ID,
+		},
+		{
+			URL:    "https://gin-gonic.com",
+			Title:  "Gin Web Framework",
+			Tags:   toJSON([]string{"go", "web", "framework"}),
+			UserID: user.ID,
+		},
+	}
+	for _, link := range links {
+		assert.NoError(t, db.DB.Create(&link).Error)
+	}
+
+	// Génère un token JWT
+	token, err := auth.CreateToken(user)
+	assert.NoError(t, err)
+
+	// Setup du routeur avec middleware
+	r := gin.Default()
+	r.GET("/links", middleware.AuthRequired(), GetLinksHandler)
+
+	// Requête GET avec header Authorization
+	req, _ := http.NewRequest("GET", "/links", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var returnedLinks []models.Link
+	err = json.Unmarshal(resp.Body.Bytes(), &returnedLinks)
+	assert.NoError(t, err)
+	assert.Len(t, returnedLinks, 2)
+	assert.Equal(t, "https://golang.org", returnedLinks[0].URL)
+	assert.Equal(t, "Gin Web Framework", returnedLinks[1].Title)
 }
