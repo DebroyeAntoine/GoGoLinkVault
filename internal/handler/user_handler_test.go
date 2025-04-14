@@ -47,7 +47,6 @@ func TestLoginUser(t *testing.T) {
 	user := models.User{
 		Email:    "test@example.com",
 		Password: hashedpwd,
-		JWTToken: "token123",
 	}
 
 	err := db.DB.Create(&user).Error

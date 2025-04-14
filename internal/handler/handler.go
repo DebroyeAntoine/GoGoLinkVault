@@ -20,24 +20,24 @@ func CreateLinkHandler(c *gin.Context) {
 	// Trouver l'utilisateur dans la DB
 	var user models.User
 	if err := db.DB.Where("email = ?", userEmail).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		ErrorResponse(c, http.StatusUnauthorized, "User not found")
 		return
 	}
 
 	var link models.Link
 	if err := c.ShouldBindJSON(&link); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ErrorResponse(c, http.StatusBadRequest, "Invalid input")
 		return
 	}
 
 	link.UserID = user.ID
 
 	if err := db.DB.Create(&link).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not save the link"})
+		ErrorResponse(c, http.StatusInternalServerError, "could not save the link")
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	SuccessResponse(c, http.StatusCreated, gin.H{
 		"id":    link.ID,
 		"url":   link.URL,
 		"title": link.Title,
@@ -113,7 +113,7 @@ func GetLinksHandler(c *gin.Context) {
 	// Vérification du token JWT et récupération de l'ID de l'utilisateur
 	claims, err := auth.ValidateToken(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -122,16 +122,16 @@ func GetLinksHandler(c *gin.Context) {
 
 	var user models.User
 	if err := db.DB.Where("email = ?", email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		ErrorResponse(c, http.StatusUnauthorized, "User not found")
 		return
 	}
 
 	// Récupération de tous les liens de l'utilisateur
-	var links []models.Link
+	var links []models.Link /* No preload because useless and risky to return User */
 	if err := db.DB.Where("user_id = ?", user.ID).Find(&links).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch links"})
+		ErrorResponse(c, http.StatusInternalServerError, "Could not fetch links")
 		return
 	}
 
-	c.JSON(http.StatusOK, links)
+	SuccessResponse(c, http.StatusOK, links)
 }

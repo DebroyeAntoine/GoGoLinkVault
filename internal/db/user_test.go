@@ -13,7 +13,6 @@ func TestUserModel(t *testing.T) {
 	user := models.User{
 		Email:    "test@example.com",
 		Password: "hashedpassword123",
-		JWTToken: "token123",
 	}
 
 	err := DB.Create(&user).Error
@@ -24,6 +23,4 @@ func TestUserModel(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, user.Email, found.Email)
 	assert.Equal(t, user.Password, found.Password)
-	assert.Equal(t, user.JWTToken, found.JWTToken)
 }
-

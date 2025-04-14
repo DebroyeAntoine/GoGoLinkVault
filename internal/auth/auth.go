@@ -1,17 +1,28 @@
 package auth
 
 import (
+	"time"
+
 	"github.com/DebroyeAntoine/go_link_vault/internal/models"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 
 	"errors"
-	"github.com/gin-gonic/gin"
+	"os"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
-var jwtKey = []byte("secret")
+var jwtKey []byte
+
+func init() {
+	key := os.Getenv("JWT_SECRET_KEY")
+	if key == "" {
+		key = "dev_default_secret" // à utiliser seulement en dev
+	}
+	jwtKey = []byte(key)
+}
 
 func JwtKey() []byte {
 	return jwtKey

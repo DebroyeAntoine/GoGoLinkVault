@@ -40,14 +40,6 @@ func Connect() {
 	}
 
 	// Auto-migrate pour créer les tables si elles n'existent pas
-	err = DB.AutoMigrate(&models.Link{})
-	if err != nil {
-		log.Fatal("Error migrating database: ", err)
-	}
-	err = DB.AutoMigrate(&models.User{})
-	if err != nil {
-		log.Fatal("Error migrating database: ", err)
-	}
 	err = DB.AutoMigrate(&models.User{}, &models.Link{})
 	if err != nil {
 		log.Fatal("Error migrating database: ", err)
@@ -84,15 +76,6 @@ func SetupTestDB() {
 	// Supprimer la table existante si elle existe
 	DB.Exec("TRUNCATE TABLE links, users RESTART IDENTITY CASCADE")
 
-	// Migrer les tables
-	err = DB.AutoMigrate(&models.Link{})
-	if err != nil {
-		log.Fatal("Error migrating test database: ", err)
-	}
-	err = DB.AutoMigrate(&models.User{})
-	if err != nil {
-		log.Fatal("Error migrating database: ", err)
-	}
 	err = DB.AutoMigrate(&models.User{}, &models.Link{})
 	if err != nil {
 		log.Fatal("Error migrating database: ", err)

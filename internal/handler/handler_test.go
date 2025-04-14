@@ -30,7 +30,6 @@ func TestCreateLink(t *testing.T) {
 	user := models.User{
 		Email:    "test@example.com",
 		Password: hashedpwd,
-		JWTToken: "token123",
 	}
 
 	err := db.DB.Create(&user).Error
@@ -131,10 +130,22 @@ func TestGetLinks(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.Code)
 
-	var returnedLinks []models.Link
-	err = json.Unmarshal(resp.Body.Bytes(), &returnedLinks)
+	// Désérialisation de la réponse JSON dans un objet avec une clé `data`
+	var jsonResponse struct {
+		Success bool          `json:"success"`
+		Data    []models.Link `json:"data"`
+	}
+
+	err = json.Unmarshal(resp.Body.Bytes(), &jsonResponse)
 	assert.NoError(t, err)
-	assert.Len(t, returnedLinks, 2)
-	assert.Equal(t, "https://golang.org", returnedLinks[0].URL)
-	assert.Equal(t, "Gin Web Framework", returnedLinks[1].Title)
+
+	// Vérifie que nous avons deux liens dans la réponse
+	assert.Len(t, jsonResponse.Data, 2)
+
+	// Vérifie les détails des liens
+	assert.Equal(t, "https://golang.org", jsonResponse.Data[0].URL)
+	assert.Equal(t, "Golang", jsonResponse.Data[0].Title)
+
+	assert.Equal(t, "https://gin-gonic.com", jsonResponse.Data[1].URL)
+	assert.Equal(t, "Gin Web Framework", jsonResponse.Data[1].Title)
 }
