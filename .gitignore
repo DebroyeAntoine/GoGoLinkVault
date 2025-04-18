@@ -53,3 +53,20 @@
 # Fichiers de configuration des outils de testing (comme l'outil de couverture de Go)
 *.cov
 
+
+### react ###
+.DS_*
+*.log
+logs
+**/*.backup.*
+**/*.back.*
+
+node_modules
+bower_components
+
+*.sublime*
+
+psd
+thumb
+sketch
+
