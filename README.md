@@ -1,5 +1,5 @@
-
 # Go Link Vault
+![Build Status](https://github.com/DebroyeAntoine/GoGoLinkVault/actions/workflows/go_unit_tests.yml/badge.svg)
 
 Go Link Vault is a link management application that allows users to create, organize, update, delete, and share links with tags and categories. The project uses **Go (Gin)** for the backend and **React (TypeScript, Tailwind CSS, Redux)** for the frontend.
 
