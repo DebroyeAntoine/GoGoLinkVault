@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/DebroyeAntoine/go_link_vault/internal/auth"
@@ -148,4 +149,36 @@ func TestGetLinks(t *testing.T) {
 
 	assert.Equal(t, "https://gin-gonic.com", jsonResponse.Data[1].URL)
 	assert.Equal(t, "Gin Web Framework", jsonResponse.Data[1].Title)
+}
+
+func TestCreateLinkValidation(t *testing.T) {
+	// setup user, token, route...
+	db.SetupTestDB()
+
+	// Création d’un utilisateur et hash du mot de passe
+	hashedPwd, _ := auth.HashPassword("testpassword")
+	user := models.User{
+		Email:    "getlinks@example.com",
+		Password: hashedPwd,
+	}
+	err := db.DB.Create(&user).Error
+	assert.NoError(t, err)
+
+	token, err := auth.CreateToken(user)
+	assert.NoError(t, err)
+
+	// Setup du routeur avec middleware
+	r := gin.Default()
+	r.POST("/links", middleware.AuthRequired(), CreateLinkHandler)
+
+	payload := `{"title": "Missing URL"}`
+	req, _ := http.NewRequest("POST", "/links", strings.NewReader(payload))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+	assert.Contains(t, resp.Body.String(), "URL")
 }

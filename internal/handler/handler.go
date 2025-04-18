@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/DebroyeAntoine/go_link_vault/internal/auth"
 	"github.com/DebroyeAntoine/go_link_vault/internal/db"
+	"github.com/DebroyeAntoine/go_link_vault/internal/dto"
 	"github.com/DebroyeAntoine/go_link_vault/internal/models"
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 )
 
 func CreateLinkHandler(c *gin.Context) {
@@ -24,21 +27,25 @@ func CreateLinkHandler(c *gin.Context) {
 		return
 	}
 
-	var link models.Link
-	if err := c.ShouldBindJSON(&link); err != nil {
-		ErrorResponse(c, http.StatusBadRequest, "Invalid input")
+	var input dto.CreateLinkDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	link.UserID = user.ID
-
+	tagsJSON, _ := json.Marshal(input.Tags)
+	link := models.Link{
+		URL:    input.URL,
+		Title:  input.Title,
+		Tags:   datatypes.JSON(tagsJSON),
+		UserID: user.ID,
+	}
 	if err := db.DB.Create(&link).Error; err != nil {
 		ErrorResponse(c, http.StatusInternalServerError, "could not save the link")
 		return
 	}
 
 	SuccessResponse(c, http.StatusCreated, gin.H{
-		"id":    link.ID,
 		"url":   link.URL,
 		"title": link.Title,
 		"tags":  link.Tags,
