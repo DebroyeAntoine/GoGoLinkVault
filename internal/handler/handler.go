@@ -142,3 +142,109 @@ func GetLinksHandler(c *gin.Context) {
 
 	SuccessResponse(c, http.StatusOK, links)
 }
+
+func UpdateLinkHandler(c *gin.Context) {
+	claims, err := auth.ValidateToken(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// On récupère l'utilisateur
+	var user models.User
+	if err := db.DB.Where("email = ?", claims.Issuer).First(&user).Error; err != nil {
+		ErrorResponse(c, http.StatusUnauthorized, "User not found")
+		return
+	}
+
+	// On récupère l'ID du lien depuis l'URL
+	linkID := c.Param("id")
+	var link models.Link
+	if err := db.DB.Where("id = ? AND user_id = ?", linkID, user.ID).First(&link).Error; err != nil {
+		ErrorResponse(c, http.StatusNotFound, "Link not found")
+		return
+	}
+
+	var input dto.UpdateLinkDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		ErrorResponse(c, http.StatusBadRequest, "Invalid input")
+		return
+	}
+
+	// Mise à jour des champs modifiables
+	if input.URL != nil {
+		link.URL = *input.URL
+	}
+	if input.Title != nil {
+		link.Title = *input.Title
+	}
+	if input.Tags != nil {
+		tagsJSON, _ := json.Marshal(*input.Tags)
+		link.Tags = tagsJSON
+	}
+
+	if err := db.DB.Save(&link).Error; err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, "Could not update the link")
+		return
+	}
+
+	SuccessResponse(c, http.StatusOK, gin.H{
+		"id":    link.ID,
+		"url":   link.URL,
+		"title": link.Title,
+		"tags":  link.Tags,
+	})
+}
+
+func DeleteLinkHandler(c *gin.Context) {
+	claims, err := auth.ValidateToken(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	email := claims.Issuer
+	var user models.User
+	if err := db.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		ErrorResponse(c, http.StatusUnauthorized, "User not found")
+		return
+	}
+
+	linkID := c.Param("id")
+	var link models.Link
+	if err := db.DB.Where("id = ? AND user_id = ?", linkID, user.ID).First(&link).Error; err != nil {
+		ErrorResponse(c, http.StatusNotFound, "Link not found")
+		return
+	}
+
+	if err := db.DB.Delete(&link).Error; err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, "Could not delete link")
+		return
+	}
+
+	SuccessResponse(c, http.StatusOK, gin.H{"message": "Link deleted successfully"})
+}
+
+func GetLinkHandler(c *gin.Context) {
+	claims, err := auth.ValidateToken(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// On récupère l'utilisateur
+	var user models.User
+	if err := db.DB.Where("email = ?", claims.Issuer).First(&user).Error; err != nil {
+		ErrorResponse(c, http.StatusUnauthorized, "User not found")
+		return
+	}
+
+	// On récupère l'ID du lien depuis l'URL
+	linkID := c.Param("id")
+	var link models.Link
+	if err := db.DB.Where("id = ? AND user_id = ?", linkID, user.ID).First(&link).Error; err != nil {
+		ErrorResponse(c, http.StatusNotFound, "Link not found")
+		return
+	}
+	SuccessResponse(c, http.StatusOK, link)
+}
