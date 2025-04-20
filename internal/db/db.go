@@ -16,7 +16,7 @@ var DB *gorm.DB
 // Fonction pour connecter à la base de données
 func Connect() {
 	// Charger le fichier .env
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file", err)
 	}
