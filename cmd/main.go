@@ -1,15 +1,18 @@
 package main
 
 import (
+	"time"
+
 	"github.com/DebroyeAntoine/go_link_vault/internal/db"
 	"github.com/DebroyeAntoine/go_link_vault/internal/handler"
+	"github.com/DebroyeAntoine/go_link_vault/internal/logger"
 	"github.com/DebroyeAntoine/go_link_vault/internal/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 func main() {
+	logger.InitLogger()
 	// Connexion DB
 	db.Connect()
 

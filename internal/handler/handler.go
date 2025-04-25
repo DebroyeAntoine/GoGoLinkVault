@@ -7,7 +7,9 @@ import (
 	"github.com/DebroyeAntoine/go_link_vault/internal/auth"
 	"github.com/DebroyeAntoine/go_link_vault/internal/db"
 	"github.com/DebroyeAntoine/go_link_vault/internal/dto"
+	"github.com/DebroyeAntoine/go_link_vault/internal/logger"
 	"github.com/DebroyeAntoine/go_link_vault/internal/models"
+	"github.com/DebroyeAntoine/go_link_vault/internal/scraper"
 	"github.com/gin-gonic/gin"
 	"gorm.io/datatypes"
 )
@@ -44,6 +46,19 @@ func CreateLinkHandler(c *gin.Context) {
 		ErrorResponse(c, http.StatusInternalServerError, "could not save the link")
 		return
 	}
+
+	go func(linkID uint, url string) {
+		metadata, err := scraper.FetchMetadata(url)
+		if err != nil {
+			logger.ErrorLogger.Println("Failed to fetch metadata:", err)
+			return
+		}
+
+		db.DB.Model(&models.Link{}).Where("id = ?", linkID).Updates(models.Link{
+			Description: metadata.Description,
+			Image:       metadata.Image,
+		})
+	}(link.ID, link.URL)
 
 	SuccessResponse(c, http.StatusCreated, gin.H{
 		"url":   link.URL,

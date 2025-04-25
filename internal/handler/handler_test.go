@@ -8,9 +8,11 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/DebroyeAntoine/go_link_vault/internal/auth"
 	"github.com/DebroyeAntoine/go_link_vault/internal/db"
+	"github.com/DebroyeAntoine/go_link_vault/internal/logger"
 	"github.com/DebroyeAntoine/go_link_vault/internal/middleware"
 	"github.com/DebroyeAntoine/go_link_vault/internal/models"
 	"github.com/gin-gonic/gin"
@@ -29,6 +31,7 @@ type ResponseData[T any] struct {
 }
 
 func TestCreateLink(t *testing.T) {
+	logger.InitLogger()
 	// Configurez la base de données de test
 	db.SetupTestDB()
 
@@ -71,6 +74,9 @@ func TestCreateLink(t *testing.T) {
 
 	// Exécutez la requête
 	r.ServeHTTP(resp, req)
+
+	// FIXME remove sleep with mock test
+	time.Sleep(500 * time.Millisecond)
 
 	// Vérifiez les résultats
 	assert.Equal(t, http.StatusCreated, resp.Code)
