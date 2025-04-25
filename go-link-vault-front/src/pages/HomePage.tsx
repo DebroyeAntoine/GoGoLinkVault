@@ -14,7 +14,7 @@ const HomePage = () => {
       {token ? (
         <LinksList />
       ) : (
-        <p>Please <a href="/login" className="text-blue-500">log in</a> to view your links.</p>
+        <p>Please <a href="/login" className="text-blue-500">log in</a> or <a href="/register" className="text-blue-500">register</a > to view your links.</p>
       )}
     </div>
   );
