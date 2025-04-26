@@ -11,8 +11,12 @@ const HomePage = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Welcome to Link Vault</h1>
-      {token ? (
-        <LinksList />
+      {token ? (<>
+          <div className="text-right mb-4">
+    <a href="/add" className="text-blue-500">Add a new link</a>
+  </div>
+
+        <LinksList /></>
       ) : (
         <p>Please <a href="/login" className="text-blue-500">log in</a> or <a href="/register" className="text-blue-500">register</a > to view your links.</p>
       )}

@@ -9,7 +9,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  token: null,
+  token: localStorage.getItem("token"),
   loading: false,
   error: null,
 };
